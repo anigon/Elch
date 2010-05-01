@@ -128,13 +128,13 @@ sub import {
 # ---- class method
 
 {
-    my $_temporary_data_hash = {};
+    my $_data_member_condition = {};
     sub DataMemberCondition {
         my $dummy     = shift;
         my $condition = shift;
 
-        $_temporary_data_hash = $condition if defined $condition;
-        return $_temporary_data_hash;
+        $_data_member_condition = $condition if defined $condition;
+        return $_data_member_condition;
     }
 }
 
