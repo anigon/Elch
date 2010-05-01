@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 
+use Data::Dumper;
 use lib qw(/home/anigon/Elch);
 
 use T;
@@ -20,8 +21,11 @@ print $sub_a_class->age, "\n";
 print $sub_a_class->mobile, "\n";
 
 print "--------------------------------------\n";
-my $sub_b_class = T::A::B->new;
+my $sub_b_class = T::A::B->new(name => "name by constructor");
 print $sub_b_class->zip, "\n";
+
+print Dumper $sub_b_class;
+print $sub_b_class->data_member;
 
 print "--------------------------------------\n";
 my $t_class = T->new(name => 'anigon');
@@ -44,5 +48,8 @@ print $t_class->z->isa_test, "\n";
 
 #$t_class->z(T::A->new); #-> exception must be thrown
 $t_class->z->isa_test_t(T::A->new);
+
+print $sub_a_class->name, "\n";
+print $sub_b_class->name, "\n";
 
 exit;

@@ -14,15 +14,15 @@ use constant PRIVATE   => 20;
 
 
 my $new = sub {
-    my $self    = shift;
+    my $class   = shift;
     my (%arg)   = @_;
 
-    my $member  = {};
+    my $data_member  = {};
     foreach my $key (keys %arg) {
-        $member->{$key} = $arg{$key};
+        $data_member->{$key} = $arg{$key};
     }
 
-    bless $member, $self;
+    bless { _data_member => $data_member }, $class;
 };
 
 my $extends = sub {
@@ -47,6 +47,9 @@ my $has = sub {
     my $default;
     $default    = $arg->{'default'} if exists $arg->{'default'};
 
+#    my $required;
+#    $required   = $arg->{'required'} if exists $arg->{'required'};
+
     my $routine = sub {
         my $self  = shift;
 
@@ -62,7 +65,7 @@ my $has = sub {
             if ($arg->{is} eq 'ro') { # read only
                 confess "this is readonly";
             } else {                  # read write (* default)
-                $self->{$method} = $value;
+                $self->data_member->{$method} = $value;
             }
         }
 
@@ -72,30 +75,36 @@ my $has = sub {
         }
 
         # set default value for lazy
-        if (! defined $self->{$method} && defined $default) {
+        if (! defined $self->data_member->{$method} && defined $default) {
             my $default_value = $default;
             $default_value    = $default->($self) if ref $default eq 'CODE';
-            $self->{$method}  = $default_value;
+            $self->data_member->{$method}  = $default_value;
         }
 
-        return $self->{$method};
+        return $self->data_member->{$method};
     };
 
     no strict 'refs';
     *{"${pkg}::${method}"}   = $routine;
 };
 
+my $data_member = sub { shift->{_data_member} };
+
 # -----------------------------------------------------
 # ---- public
+
 
 sub import {
     my $class = shift;
     my ($pkg) = caller;
 
     no strict 'refs';
-    *{"${pkg}::new"}     = $new;
-    *{"${pkg}::has"}     = $has;
     *{"${pkg}::extends"} = $extends;
+    *{"${pkg}::has"}     = $has;
+    *{"${pkg}::new"}     = $new;
+
+    *{"${pkg}::data_member"} = $data_member;
+
 }
 
 # -----------------------------------------------------
