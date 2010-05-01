@@ -6,9 +6,9 @@ use warnings;
 use Data::Dumper;
 use lib qw(/home/anigon/Elch);
 
+use T::A::B;
 use T;
 use T::A;
-use T::A::B;
 use Z;
 
 #print "T $_\n"       for (keys %{T::});
@@ -21,15 +21,18 @@ print $sub_a_class->age, "\n";
 print $sub_a_class->mobile, "\n";
 
 print "--------------------------------------\n";
-my $sub_b_class = T::A::B->new(name => "name by constructor");
+my $sub_b_class = T::A::B->new(
+                    name => "name by constructor",
+                  );
 print $sub_b_class->zip, "\n";
 
-print Dumper $sub_b_class;
-print $sub_b_class->data_member;
-
 print "--------------------------------------\n";
-my $t_class = T->new(name => 'anigon');
+my $t_class = T->new(
+                name => 'anigon',
+                address => "address by constructor",
+              );
 print $t_class->name, "\n";
+print $t_class->address, "\n";
 print $t_class->tel, "\n";
 
 print "--------------------------------------\n";

@@ -13,13 +13,27 @@ use constant PROTECTED => 10;
 use constant PRIVATE   => 20;
 
 
+# -----------------------------------------------------
+# ---- meta method -> like use Exporter
+
 my $new = sub {
     my $class   = shift;
     my (%arg)   = @_;
 
-    my $data_member  = {};
+    my $data_member = {};
     foreach my $key (keys %arg) {
         $data_member->{$key} = $arg{$key};
+    }
+
+    # check required data
+    my $condition       = __PACKAGE__->DataMemberCondition;
+    my $class_condition = $condition->{$class};
+
+    for my $key (keys %{$class_condition}) {
+        next unless defined $class_condition->{$key}->{required};
+
+        (exists $data_member->{$key} && defined $data_member->{$key})
+                                        or confess "$key is required";
     }
 
     bless { _data_member => $data_member }, $class;
@@ -44,11 +58,14 @@ my $has = sub {
     my ($arg)   = @_;
     my ($pkg)   = caller;
 
+    if (defined $arg->{'required'}) {
+        my $condition = __PACKAGE__->DataMemberCondition;
+        $condition->{$pkg}{$method} = {required => 1};
+        __PACKAGE__->DataMemberCondition($condition);
+    }
+
     my $default;
     $default    = $arg->{'default'} if exists $arg->{'default'};
-
-#    my $required;
-#    $required   = $arg->{'required'} if exists $arg->{'required'};
 
     my $routine = sub {
         my $self  = shift;
@@ -93,12 +110,12 @@ my $data_member = sub { shift->{_data_member} };
 # -----------------------------------------------------
 # ---- public
 
-
 sub import {
     my $class = shift;
     my ($pkg) = caller;
 
     no strict 'refs';
+
     *{"${pkg}::extends"} = $extends;
     *{"${pkg}::has"}     = $has;
     *{"${pkg}::new"}     = $new;
@@ -109,6 +126,17 @@ sub import {
 
 # -----------------------------------------------------
 # ---- class method
+
+{
+    my $_temporary_data_hash = {};
+    sub DataMemberCondition {
+        my $dummy     = shift;
+        my $condition = shift;
+
+        $_temporary_data_hash = $condition if defined $condition;
+        return $_temporary_data_hash;
+    }
+}
 
 sub EnsureIsAllowClassType {
     my $dummy = shift;
