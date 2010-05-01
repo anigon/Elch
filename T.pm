@@ -1,29 +1,46 @@
 package T;
-
+# super class
 use Elch;
 
 # --------------------------------------
-# ---- external
+# ---- public
 
-has name => { # public method
+has name => {
     'is' => "ro",
 };
 
-has test => { # public method
+has tel => {
+    'is' => "ro",
+    default => sub {
+        return shift->_tel;
+    },
+};
+
+has test => {
     'is' => "rw",
     default => sub {
-        return shift->_test;
+        return shift->__test;
     },
 };
 
 # --------------------------------------
-# ---- internal 
+# ---- protected
 
-has _test => { # private method
+has _tel => {
+    'is' => "rw",
+    default => sub {
+        return "this is protected tel";
+    },
+};
+
+# --------------------------------------
+# ---- private
+
+has __test => {
     'is' => "rw",
     default => sub {
         return "this is test string";
     },
 };
 
-1; # end of perl-module
+1; # end of this class
