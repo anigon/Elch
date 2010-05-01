@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use Carp;
 
+use constant TRUE      => 1;
+use constant FALSE     => -1;
 use constant PROTECTED => 10;
 use constant PRIVATE   => 20;
 
@@ -33,33 +35,6 @@ my $extends = sub {
     }
 };
 
-sub _can_execute {
-    my ($pkg, $method, $caller_class_name) = @_;
-
-    return unless $method =~ /^_(_?)/;
-
-    my $scope = ($1 ? PRIVATE : PROTECTED);
-
-    if ($scope == PRIVATE) {
-        $caller_class_name eq $pkg
-            or confess "$method cannot be called from other class";
-
-    } elsif ($scope == PROTECTED) {
-        return if $caller_class_name eq $pkg; # itself
-
-        my $is_subclass = 0;
-
-        no strict 'refs';
-        for (@{"${caller_class_name}::ISA"}) {
-            next unless $_ =~ /^$pkg$/;
-            $is_subclass++; last;
-        }
-        use strict 'refs';
-
-        $is_subclass
-            or confess "$method cannot be called from other package";
-    }
-}
 
 my $has = sub {
     my $method  = shift;
@@ -73,37 +48,13 @@ my $has = sub {
 
         # check scope
         my ($caller_class_name) = caller();
-        &_can_execute($pkg, $method, $caller_class_name);
-#        if ($method =~ /^_(_?)/) {
-#            my $is_private          = $1;
-#            my ($caller_class_name) = caller();
-#
-#            if ($is_private) {
-#                $caller_class_name eq $pkg
-#                    or confess "$method cannot be called from other class";
-#
-#            } else { # protected method
-#                if ($caller_class_name ne $pkg) {
-#                    my $is_subclass = 0;
-#
-#                    no strict 'refs';
-#                    for (@{"${caller_class_name}::ISA"}) {
-#                        next unless $_ =~ /^$pkg$/;
-#                        $is_subclass++; last;
-#                    }
-#                    use strict 'refs';
-#
-#                    $is_subclass
-#                        or confess "$method cannot be called from other package";
-#                }
-#            }
-#        }
+        &ensure_is_allow_scope($pkg, $method, $caller_class_name);
 
         # check arg
         if (scalar @_ > 1) {
             if ($arg->{is} eq 'ro') { # read only
                 confess "this is readonly";
-            } else { # read write (* default)
+            } else {                  # read write (* default)
                 $_[0]->{$method} = $_[1];
             }
         }
@@ -130,6 +81,36 @@ sub import {
     *{"${pkg}::new"}     = $new;
     *{"${pkg}::has"}     = $has;
     *{"${pkg}::extends"} = $extends;
+}
+
+sub ensure_is_allow_scope {
+    my ($pkg, $method, $caller_class_name) = @_;
+
+    return TRUE unless $method =~ /^_(_?)/;
+
+    my $scope = ($1 ? PRIVATE : PROTECTED);
+
+    if ($scope == PRIVATE) {
+        $caller_class_name eq $pkg
+            or confess "$method cannot be called from other class";
+
+    } elsif ($scope == PROTECTED) {
+        return if $caller_class_name eq $pkg; # itself
+
+        my $is_subclass = 0;
+
+        no strict 'refs';
+        for (@{"${caller_class_name}::ISA"}) {
+            next unless $_ =~ /^$pkg$/;
+            $is_subclass++; last;
+        }
+        use strict 'refs';
+
+        $is_subclass
+            or confess "$method cannot be called from other package";
+    }
+
+    return TRUE;
 }
 
 1; # end of this class
