@@ -1,7 +1,10 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
+use warnings;
+
 use lib qw(/home/anigon/Elch);
+
 use T;
 use T::A;
 use T::A::B;
@@ -11,23 +14,35 @@ use Z;
 #print "T::A $_\n"    for (keys %{T::A::});
 #print "T::A::B $_\n" for (keys %{T::A::B::});
 
+print "--------------------------------------\n";
 my $sub_a_class = T::A->new;
 print $sub_a_class->age, "\n";
 print $sub_a_class->mobile, "\n";
 
+print "--------------------------------------\n";
 my $sub_b_class = T::A::B->new;
 print $sub_b_class->zip, "\n";
 
-my $obj = T->new(name => 'anigon');
-print $obj->name, "\n";
-print $obj->tel, "\n";
+print "--------------------------------------\n";
+my $t_class = T->new(name => 'anigon');
+print $t_class->name, "\n";
+print $t_class->tel, "\n";
 
 print "--------------------------------------\n";
-print $obj->test, "\n";
-print "--------------------------------------\n";
-#print $obj->_test, "\n";
+print $t_class->test, "\n";
+#print $t_class->_test, "\n"; #-> exception must be thrown
 
+print "--------------------------------------\n";
 my $z_class = Z->new;
-print $z_class->tel, "\n";
+$t_class->z($z_class);
+print $t_class->z->tel, "\n";
+
+my @array = qw(a b c);
+#$t_class->z->isa_test("scalar"); #-> exception must be thrown
+$t_class->z->isa_test(\@array);
+print $t_class->z->isa_test, "\n";
+
+#$t_class->z(T::A->new); #-> exception must be thrown
+$t_class->z->isa_test_t(T::A->new);
 
 exit;
