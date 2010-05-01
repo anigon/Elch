@@ -6,6 +6,15 @@ extends 'T';
 # --------------------------------------
 # ---- public
 
+sub gelegenheit {}
+
+has name => {
+    is => "ro",
+    default => sub {
+        return "THIS IS name OF T::A";
+    },
+};
+
 has age => {
     is => "ro",
     default => sub {

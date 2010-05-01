@@ -1,12 +1,17 @@
 package T;
 # super class
 use Elch;
+requires qw(gelegenheit vergangenheit);
 
 # --------------------------------------
 # ---- public
 
 has name => {
-    'is' => "ro",
+    'is' => "ro", required => 1,
+};
+
+has address => {
+    'is' => "ro", required => 1,
 };
 
 has tel => {

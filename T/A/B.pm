@@ -5,6 +5,14 @@ extends 'T::A';
 
 # --------------------------------------
 # ---- public
+sub vergangenheit {}
+
+has name => {
+    is => "ro",
+    default => sub {
+        return "THIS IS name of T::A::B";
+    },
+};
 
 has zip => {
     is => "ro",

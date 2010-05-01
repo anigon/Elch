@@ -6,6 +6,7 @@ use warnings;
 use Data::Dumper;
 use lib qw(/home/anigon/Elch);
 
+use T::B;
 use T::A::B;
 use T;
 use T::A;
