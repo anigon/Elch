@@ -1,33 +1,25 @@
-package T::A;
+package T::A::B;
 # sub class
 use Elch;
-extends 'T';
+extends 'T::A';
 
 # --------------------------------------
 # ---- public
 
-has age => {
+has zip => {
     is => "ro",
     default => sub {
-        shift->__age;
-    },
-};
-
-has mobile => {
-    is => "ro",
-    default => sub {
-#        shift->name;
-        shift->_tel;
+        shift->__zip;
     },
 };
 
 # --------------------------------------
 # ---- private
 
-has __age => {
+has __zip => {
     is => "ro",
     default => sub {
-        "this is age";
+        "this is zip";
     },
 };
 
