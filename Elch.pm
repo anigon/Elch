@@ -14,7 +14,7 @@ use constant PRIVATE   => 20;
 
 
 # -----------------------------------------------------
-# ---- meta method -> like use Exporter
+# ---- base method -> like use Exporter
 
 my $new = sub {
     my $class   = shift;
