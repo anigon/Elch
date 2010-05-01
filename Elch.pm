@@ -4,10 +4,14 @@ use strict;
 use warnings;
 use Carp;
 
+# -----------------------------------------------------
+# ---- constant
+
 use constant TRUE      => 1;
-use constant FALSE     => -1;
+use constant FALSE     => undef;
 use constant PROTECTED => 10;
 use constant PRIVATE   => 20;
+
 
 my $new = sub {
     my $self    = shift;
@@ -35,7 +39,6 @@ my $extends = sub {
     }
 };
 
-
 my $has = sub {
     my $method  = shift;
     my ($arg)   = @_;
@@ -45,33 +48,45 @@ my $has = sub {
     $default    = $arg->{'default'} if exists $arg->{'default'};
 
     my $routine = sub {
+        my $self  = shift;
+
+        my $is_setter_mode = (scalar @_ >= 1 ? TRUE : FALSE);
+        my $value          = shift;
 
         # check scope
         my ($caller_class_name) = caller();
-        &ensure_is_allow_scope($pkg, $method, $caller_class_name);
+        __PACKAGE__->EnsureIsAllowScope($pkg, $method, $caller_class_name);
 
-        # check arg
-        if (scalar @_ > 1) {
+        # check read/write permission
+        if ($is_setter_mode) {
             if ($arg->{is} eq 'ro') { # read only
                 confess "this is readonly";
             } else {                  # read write (* default)
-                $_[0]->{$method} = $_[1];
+                $self->{$method} = $value;
             }
         }
 
-        # set default value for lazy
-        if (! defined $_[0]->{$method} && defined $default) {
-            my $default_value = $default;
-            $default_value    = $default->($_[0]) if ref $default eq 'CODE';
-            $_[0]->{$method}  = $default_value;
+        # check isa
+        if (defined $arg->{isa} && $is_setter_mode) {
+            __PACKAGE__->EnsureIsAllowClassType($arg->{isa}, $value);
         }
 
-        return $_[0]->{$method};
+        # set default value for lazy
+        if (! defined $self->{$method} && defined $default) {
+            my $default_value = $default;
+            $default_value    = $default->($self) if ref $default eq 'CODE';
+            $self->{$method}  = $default_value;
+        }
+
+        return $self->{$method};
     };
 
     no strict 'refs';
     *{"${pkg}::${method}"}   = $routine;
 };
+
+# -----------------------------------------------------
+# ---- public
 
 sub import {
     my $class = shift;
@@ -83,7 +98,26 @@ sub import {
     *{"${pkg}::extends"} = $extends;
 }
 
-sub ensure_is_allow_scope {
+# -----------------------------------------------------
+# ---- class method
+
+sub EnsureIsAllowClassType {
+    my $dummy = shift;
+    my ($required_class_type, $value) = @_;
+
+    defined $value
+        or confess "value is undefined";
+
+    my $value_class_type    = ref $value || $value;
+    $value_class_type =~ /^$required_class_type/
+        or confess "class type must be $required_class_type. ".
+                   "this class type is $value_class_type";
+
+    return TRUE;
+}
+
+sub EnsureIsAllowScope {
+    my $dummy = shift;
     my ($pkg, $method, $caller_class_name) = @_;
 
     return TRUE unless $method =~ /^_(_?)/;
@@ -97,12 +131,12 @@ sub ensure_is_allow_scope {
     } elsif ($scope == PROTECTED) {
         return if $caller_class_name eq $pkg; # itself
 
-        my $is_subclass = 0;
+        my $is_subclass = FALSE;
 
         no strict 'refs';
         for (@{"${caller_class_name}::ISA"}) {
             next unless $_ =~ /^$pkg$/;
-            $is_subclass++; last;
+            $is_subclass = TRUE; last;
         }
         use strict 'refs';
 
