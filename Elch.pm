@@ -84,7 +84,7 @@ my $has = sub {
 
     if (defined $arg->{'required'}) {
         my $condition = __PACKAGE__->PackageCondition($pkg);
-        $condition->{data_member}{$method}{required} = 1;
+        $condition->{data_member}{$method}{required} = TRUE;
         __PACKAGE__->PackageCondition($pkg, $condition);
     }
 
